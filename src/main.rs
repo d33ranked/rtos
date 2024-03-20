@@ -7,21 +7,32 @@
 use core::panic::PanicInfo;
 use rtos::println;
 
-#[no_mangle]
+
+
+
+
+#[no_mangle] // don't mangle the name of this function
 pub extern "C" fn _start() -> ! {
     println!("Hello World{}", "!");
 
-    rtos::init(); // new
+    rtos::init();
 
-    // invoke a breakpoint exception
-    x86_64::instructions::interrupts::int3(); // new
+    fn stack_overflow() {
+        stack_overflow(); // for each recursion, the return address is pushed
+    }
+
+
+
+    
 
     // as before
     #[cfg(test)]
     test_main();
 
     println!("It did not crash!");
-    loop {}
+
+    rtos::hlt_loop();
+    
 }
 
 /// This function is called on panic.
@@ -29,7 +40,7 @@ pub extern "C" fn _start() -> ! {
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
     println!("{}", info);
-    loop {}
+    rtos::hlt_loop();
 }
 
 #[cfg(test)]
